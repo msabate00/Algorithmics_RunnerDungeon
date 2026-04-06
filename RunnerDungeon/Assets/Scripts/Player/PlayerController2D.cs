@@ -115,6 +115,7 @@ public class PlayerController2D : MonoBehaviour
     private InputAction attackAction;
 
     private MotorState state = MotorState.Normal;
+    private MotorState last_state = MotorState.Normal;
 
     private Vector2 moveInput;
     private bool jumpPressed;
@@ -856,10 +857,19 @@ public class PlayerController2D : MonoBehaviour
         animator.SetBool("DashAttack", state == MotorState.DashAttacking);
         animator.SetBool("Attack", state == MotorState.Attacking);
         animator.SetBool("Slide", state == MotorState.GroundSliding);
+
+        if(state == MotorState.LedgeHang && last_state != state)
+        {
+             animator.SetTrigger("LedgeGrab");
+        }
+
+       
         animator.SetBool("LedgeHang", state == MotorState.LedgeHang);
         animator.SetBool("Ladder", state == MotorState.Ladder);
         animator.SetBool("Hurt", state == MotorState.Hurt);
         animator.SetBool("Dead", state == MotorState.Dead);
+
+        last_state = state;
     }
 
     private void OnDrawGizmosSelected()
