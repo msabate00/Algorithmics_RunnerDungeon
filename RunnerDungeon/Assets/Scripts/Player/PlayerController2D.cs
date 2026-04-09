@@ -23,6 +23,20 @@ public class PlayerController2D : MonoBehaviour
     [SerializeField] private Animator animator;
     [SerializeField] private SpriteRenderer spriteRenderer;
 
+    [Header("Mechanic Toggles")]
+    public bool enableHorizontalMovement = true;
+    public bool enableJump = true;
+    public bool enableWallSlide = true;
+    public bool enableWallJump = true;
+    public bool enableDash = true;
+    public bool enableDashAttack = true;
+    public bool enableGroundSlide = true;
+    public bool enableAttack = true;
+    public bool enableLedgeGrab = true;
+    public bool enableLadderClimb = true;
+    public bool enableCrouch = true;
+    public bool enableDamage = true;
+
     [Header("Checks")]
     [SerializeField] private Transform groundCheck;
     [SerializeField] private Transform ceilingCheck;
@@ -385,6 +399,18 @@ public class PlayerController2D : MonoBehaviour
         if (ledgeClimbing)
             return;
 
+        if (!enableLedgeGrab && state == MotorState.LedgeHang)
+        {
+            ExitLedgeHang(dropDown: true);
+            return;
+        }
+
+        if (!enableLadderClimb && state == MotorState.Ladder)
+        {
+            ExitLadder();
+            return;
+        }
+
         if (state == MotorState.LedgeHang)
         {
             HandleLedgeHangInput();
@@ -399,7 +425,7 @@ public class PlayerController2D : MonoBehaviour
 
         if (state == MotorState.Dashing)
         {
-            if (attackPressed)
+            if (attackPressed && enableDashAttack)
                 EnterDashAttack();
 
             return;
@@ -422,7 +448,7 @@ public class PlayerController2D : MonoBehaviour
 
         if (dashPressed && CanDash())
         {
-            if (ShouldGroundSlide())
+            if (enableGroundSlide && ShouldGroundSlide())
                 EnterGroundSlide();
             else
                 EnterDash();
@@ -451,7 +477,7 @@ public class PlayerController2D : MonoBehaviour
     private void ApplyHorizontalMovement()
     {
         bool crouching = ShouldStayCrouched();
-        float targetSpeed = crouching ? 0f : moveInput.x * maxRunSpeed;
+        float targetSpeed = (!enableHorizontalMovement || crouching) ? 0f : moveInput.x * maxRunSpeed;
 
         if (wallJumpLockCounter > 0f)
             targetSpeed = rb.linearVelocity.x;
@@ -488,6 +514,7 @@ public class PlayerController2D : MonoBehaviour
 
     private bool CanWallSlide()
     {
+        if (!enableWallSlide) return false;
         if (isGrounded) return false;
         if (state != MotorState.Normal && state != MotorState.Attacking && state != MotorState.Hurt) return false;
         if (currentWallSide == 0) return false;
@@ -499,6 +526,8 @@ public class PlayerController2D : MonoBehaviour
 
     private bool TryConsumeJump()
     {
+        if (!enableJump) return false;
+
         if (state == MotorState.Ladder)
         {
             ExitLadder();
@@ -531,7 +560,7 @@ public class PlayerController2D : MonoBehaviour
 
     private bool CanWallJump()
     {
-        return !isGrounded && currentWallSide != 0;
+        return enableWallJump && !isGrounded && currentWallSide != 0;
     }
 
     private void PerformWallJump()
@@ -549,6 +578,7 @@ public class PlayerController2D : MonoBehaviour
 
     private bool CanDash()
     {
+        if (!enableDash) return false;
         if (dashCharges <= 0) return false;
         if (dashCooldownTimer > 0f) return false;
         if (state == MotorState.Attacking || state == MotorState.Hurt) return false;
@@ -578,7 +608,7 @@ public class PlayerController2D : MonoBehaviour
 
     private bool CanAttack()
     {
-        return state == MotorState.Normal && !ledgeClimbing && state != MotorState.Dead;
+        return enableAttack && state == MotorState.Normal && !ledgeClimbing && state != MotorState.Dead;
     }
 
     private void EnterAttack()
@@ -623,6 +653,7 @@ public class PlayerController2D : MonoBehaviour
 
     private bool CanEnterLadder()
     {
+        if (!enableLadderClimb) return false;
         if (!isInLadderZone) return false;
         if (state != MotorState.Normal) return false;
         if (Mathf.Abs(moveInput.y) < 0.2f) return false;
@@ -645,6 +676,12 @@ public class PlayerController2D : MonoBehaviour
 
     private void HandleLadderState()
     {
+        if (!enableLadderClimb)
+        {
+            ExitLadder();
+            return;
+        }
+
         dashCharges = maxDashCharges;
 
         if (!isInLadderZone)
@@ -669,6 +706,7 @@ public class PlayerController2D : MonoBehaviour
 
     private bool CanEnterLedgeHang()
     {
+        if (!enableLedgeGrab) return false;
         if (isGrounded) return false;
         if (state != MotorState.Normal) return false;
         if (rb.linearVelocity.y > 0f) return false;
@@ -764,13 +802,14 @@ public class PlayerController2D : MonoBehaviour
             if (damageable != null)
             {
                 Vector2 hitDir = new Vector2(facing, 0f);
-                damageable.TakeDamage(damage, attackPoint.position, hitDir);
+                damageable.TakeDamage(damage);
             }
         }
     }
 
     public void TakeDamage(int amount, Vector2 sourcePosition)
     {
+        if (!enableDamage) return;
         if (state == MotorState.Dead) return;
         if (invulnerabilityCounter > 0f) return;
 
@@ -815,12 +854,15 @@ public class PlayerController2D : MonoBehaviour
 
     private bool ShouldStayCrouched()
     {
-        if (state == MotorState.GroundSliding)
-            return true;
-
-        bool wantsCrouch = isGrounded && moveInput.y < -0.45f;
         bool blockedAbove = Physics2D.OverlapCircle(ceilingCheck.position, ceilingCheckRadius, groundLayer | wallLayer);
 
+        if (state == MotorState.GroundSliding)
+            return enableGroundSlide || blockedAbove;
+
+        if (!enableCrouch)
+            return blockedAbove;
+
+        bool wantsCrouch = isGrounded && moveInput.y < -0.45f;
         return wantsCrouch || blockedAbove;
     }
 
@@ -894,7 +936,7 @@ public class PlayerController2D : MonoBehaviour
     }
 }
 
-public interface IDamageable
-{
-    void TakeDamage(int amount, Vector2 hitPoint, Vector2 hitDirection);
-}
+//public interface IDamageable
+//{
+//    void TakeDamage(int amount, Vector2 hitPoint, Vector2 hitDirection);
+//}
