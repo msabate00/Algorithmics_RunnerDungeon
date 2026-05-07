@@ -17,7 +17,7 @@ public class EnemyChaseState : EnemyStateBase
             return;
         }
 
-        if (enemy.player == null)
+        if (!enemy.HasPlayer)
         {
             enemy.PrepareReturnToNearestPatrolPoint();
             enemy.ChangeState(enemy.ReturnState);
@@ -26,7 +26,7 @@ public class EnemyChaseState : EnemyStateBase
 
         float distance = enemy.DistanceToPlayer();
         float verticalDifference = enemy.VerticalDifferenceToPlayer();
-        float horizontalDifference = enemy.player.position.x - enemy.transform.position.x;
+        float horizontalDifference = enemy.PlayerPosition.x - enemy.transform.position.x;
 
         if (distance > enemy.loseDistance)
         {
@@ -59,8 +59,6 @@ public class EnemyChaseState : EnemyStateBase
         }
 
         if (!enemy.allowDropFromPlatforms && !enemy.GroundAhead() && enemy.IsGrounded() && verticalDifference < -0.25f)
-        {
             enemy.StopMoving();
-        }
     }
 }

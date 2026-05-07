@@ -4,8 +4,8 @@ public class EnemyHealth : MonoBehaviour
 {
     [Header("Vida")]
     public int maxHealth = 3;
-    public bool destroyOnDeath = false;
-    public float destroyDelay = 0.3f;
+    public bool destroyOnDeath = true;
+    public float destroyDelay = 0.6f;
 
     [Header("Opcional")]
     public Collider2D[] collidersToDisable;
@@ -18,14 +18,14 @@ public class EnemyHealth : MonoBehaviour
     public int CurrentHealth => currentHealth;
     public bool IsDead => isDead;
 
-    private void Start()
+    private void Awake()
     {
-        currentHealth = maxHealth;
+        currentHealth = Mathf.Max(1, maxHealth);
     }
 
     public void TakeDamage(int amount)
     {
-        if (isDead)
+        if (isDead || amount <= 0)
             return;
 
         currentHealth -= amount;
@@ -34,9 +34,15 @@ public class EnemyHealth : MonoBehaviour
         SendMessage("OnEnemyHurt", SendMessageOptions.DontRequireReceiver);
 
         if (currentHealth <= 0)
-        {
             Die();
-        }
+    }
+
+    public void Heal(int amount)
+    {
+        if (isDead || amount <= 0)
+            return;
+
+        currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
     }
 
     private void Die()
@@ -54,20 +60,24 @@ public class EnemyHealth : MonoBehaviour
 
         foreach (MonoBehaviour behaviour in behavioursToDisable)
         {
-            if (behaviour != null)
-                behaviour.enabled = false;
+            if (behaviour == null)
+                continue;
+
+            if (behaviour is Animator)
+                continue;
+
+            if (behaviour is EnemyStateMachine)
+                continue;
+
+            behaviour.enabled = false;
         }
 
         if (deathEffect != null)
-        {
             Instantiate(deathEffect, transform.position, Quaternion.identity);
-        }
 
         SendMessage("OnEnemyDied", SendMessageOptions.DontRequireReceiver);
 
         if (destroyOnDeath)
             Destroy(gameObject, destroyDelay);
-        else
-            gameObject.SetActive(false);
     }
 }

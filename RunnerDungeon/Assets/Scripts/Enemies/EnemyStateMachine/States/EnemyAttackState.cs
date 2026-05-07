@@ -18,7 +18,7 @@ public class EnemyAttackState : EnemyStateBase
             return;
         }
 
-        if (enemy.player == null)
+        if (!enemy.HasPlayer)
         {
             enemy.PrepareReturnToNearestPatrolPoint();
             enemy.ChangeState(enemy.ReturnState);
@@ -26,7 +26,7 @@ public class EnemyAttackState : EnemyStateBase
         }
 
         enemy.StopMoving();
-        enemy.FaceTarget(enemy.player.position.x);
+        enemy.FaceTarget(enemy.PlayerPosition.x);
 
         float distance = enemy.DistanceToPlayer();
         float verticalDifference = Mathf.Abs(enemy.VerticalDifferenceToPlayer());

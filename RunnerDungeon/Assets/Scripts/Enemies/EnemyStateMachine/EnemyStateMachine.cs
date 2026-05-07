@@ -62,6 +62,8 @@ public class EnemyStateMachine : MonoBehaviour
     public float StateTimer { get; set; }
     public bool SuspendAutoMovement { get; set; }
     public bool HasPatrolPoints => patrolPoints != null && patrolPoints.Length > 0;
+    public bool HasPlayer => player != null;
+    public Vector3 PlayerPosition => player != null ? player.position : transform.position;
 
     private float desiredVelocityX;
     private float nextJumpTime;
@@ -73,6 +75,12 @@ public class EnemyStateMachine : MonoBehaviour
         if (health == null)
             health = GetComponent<EnemyHealth>();
 
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
+        if (animator == null)
+            animator = GetComponent<Animator>();
+
         PatrolState = new EnemyPatrolState(this);
         ChaseState = new EnemyChaseState(this);
         ReturnState = new EnemyReturnState(this);
@@ -83,13 +91,7 @@ public class EnemyStateMachine : MonoBehaviour
 
     private void Start()
     {
-        if (player == null)
-        {
-            GameObject playerObject = GameObject.FindGameObjectWithTag(playerTag);
-            if (playerObject != null)
-                player = playerObject.transform;
-        }
-
+        TryFindPlayer();
         ChangeState(PatrolState);
     }
 
@@ -97,6 +99,9 @@ public class EnemyStateMachine : MonoBehaviour
     {
         if (AttackTimer > 0f)
             AttackTimer -= Time.deltaTime;
+
+        if (player == null)
+            TryFindPlayer();
 
         CurrentState?.LogicUpdate();
         UpdateAnimator();
@@ -106,6 +111,16 @@ public class EnemyStateMachine : MonoBehaviour
     {
         CurrentState?.PhysicsUpdate();
         ApplyHorizontalMovement();
+    }
+
+    public void TryFindPlayer()
+    {
+        if (player != null)
+            return;
+
+        GameObject playerObject = GameObject.FindGameObjectWithTag(playerTag);
+        if (playerObject != null)
+            player = playerObject.transform;
     }
 
     public void ChangeState(EnemyStateBase newState)
@@ -260,7 +275,7 @@ public class EnemyStateMachine : MonoBehaviour
         Collider2D hit = Physics2D.OverlapCircle(center, attackRadius, playerLayer);
 
         if (hit == null && DistanceToPlayer() <= attackDistance + 0.05f)
-            hit = player.GetComponent<Collider2D>();
+            hit = player.GetComponent<Collider2D>() ?? player.GetComponentInChildren<Collider2D>();
 
         if (hit != null)
             hit.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);

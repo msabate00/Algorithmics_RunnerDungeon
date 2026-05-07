@@ -83,11 +83,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 3
-  destroyOnDeath: 0
-  destroyDelay: 0.3
-  collidersToDisable: []
+  destroyOnDeath: 1
+  destroyDelay: 0.8
+  collidersToDisable:
+  - {fileID: 2368369210300600491}
   behavioursToDisable:
-  - {fileID: 0}
+  - {fileID: 5096182920688541828}
   deathEffect: {fileID: 0}
 --- !u!114 &5096182920688541828
 MonoBehaviour:
@@ -96,7 +97,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2065900520971710122}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ea9f824fe41e3d7458bf2aed4e77905b, type: 3}
   m_Name: 
@@ -116,7 +117,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b794c0dfc50fab48ba80feb6685e0c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  patrolPoints: []
+  patrolPoints:
+  - {fileID: 9151356894680781475}
+  - {fileID: 6455184050628180522}
   player: {fileID: 0}
   spriteRenderer: {fileID: 8906822308479032657}
   animator: {fileID: 2075512814099966325}
@@ -136,7 +139,7 @@ MonoBehaviour:
     m_Bits: 8
   playerLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 512
   groundCheckRadius: 0.15
   wallCheckDistance: 0.35
   edgeCheckDistance: 0.8

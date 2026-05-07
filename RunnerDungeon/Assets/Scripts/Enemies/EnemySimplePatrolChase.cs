@@ -5,6 +5,7 @@ public class EnemySimplePatrolChase : MonoBehaviour
     [Header("Referencias")]
     public Transform[] patrolPoints;
     public Transform player;
+    public string playerTag = "Player";
 
     [Header("Movimiento")]
     public float patrolSpeed = 2f;
@@ -23,13 +24,30 @@ public class EnemySimplePatrolChase : MonoBehaviour
     private bool isChasing;
     private bool isDead;
 
+    private void Awake()
+    {
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+    }
+
+    private void Start()
+    {
+        TryFindPlayer();
+    }
+
     private void Update()
     {
         if (isDead)
             return;
 
-        if (player == null || patrolPoints == null || patrolPoints.Length == 0)
+        if (player == null)
+            TryFindPlayer();
+
+        if (player == null)
+        {
+            Patrol();
             return;
+        }
 
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
 
@@ -44,9 +62,21 @@ public class EnemySimplePatrolChase : MonoBehaviour
             Patrol();
     }
 
+    private void TryFindPlayer()
+    {
+        GameObject playerObject = GameObject.FindGameObjectWithTag(playerTag);
+        if (playerObject != null)
+            player = playerObject.transform;
+    }
+
     private void Patrol()
     {
+        if (patrolPoints == null || patrolPoints.Length == 0)
+            return;
+
         Transform target = patrolPoints[patrolIndex];
+        if (target == null)
+            return;
 
         transform.position = Vector2.MoveTowards(
             transform.position,
@@ -61,6 +91,9 @@ public class EnemySimplePatrolChase : MonoBehaviour
 
     private void ChasePlayer()
     {
+        if (player == null)
+            return;
+
         transform.position = Vector2.MoveTowards(
             transform.position,
             player.position,

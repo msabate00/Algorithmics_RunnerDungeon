@@ -8,9 +8,31 @@ public class EnemyContactDamage : MonoBehaviour
     public string playerTag = "Player";
 
     private float nextHitTime;
+    private EnemyHealth cachedHealth;
+
+    private void Awake()
+    {
+        cachedHealth = GetComponentInParent<EnemyHealth>();
+    }
 
     private void OnTriggerStay2D(Collider2D other)
     {
+        TryDamage(other.gameObject);
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        TryDamage(collision.collider.gameObject);
+    }
+
+    private void TryDamage(GameObject other)
+    {
+        if (other == null)
+            return;
+
+        if (cachedHealth != null && cachedHealth.IsDead)
+            return;
+
         if (!other.CompareTag(playerTag))
             return;
 
@@ -18,8 +40,6 @@ public class EnemyContactDamage : MonoBehaviour
             return;
 
         nextHitTime = Time.time + hitCooldown;
-
-        // Busca cualquier método TakeDamage(int) en el jugador.
         other.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
     }
 }

@@ -26,9 +26,7 @@ public class EnemyHurtState : EnemyStateBase
             return;
 
         if (enemy.CanSeePlayer())
-        {
             enemy.ChangeState(enemy.ChaseState);
-        }
         else
         {
             enemy.PrepareReturnToNearestPatrolPoint();
